@@ -1,0 +1,12 @@
+.git
+node_modules
+.wrangler
+.sites-runtime
+.vinext
+.dev.vars*
+.env*
+selfhost/secrets
+selfhost-build
+work
+outputs
+dist

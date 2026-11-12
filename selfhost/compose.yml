@@ -1,0 +1,43 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: selfhost/Dockerfile
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      APP_ORIGIN: https://${CLINIC_DOMAIN:?Set CLINIC_DOMAIN}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL}
+      ADMIN_PASSWORD_FILE: /run/secrets/admin_password
+      CLINIC_DATA_KEY_FILE: /run/secrets/clinic_data_key
+      DEMO_MODE: "false"
+    volumes:
+      - clinic_data:/data
+    secrets: [admin_password, clinic_data_key]
+    networks: [clinic]
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      CLINIC_DOMAIN: ${CLINIC_DOMAIN:?Set CLINIC_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [clinic]
+    depends_on: [app]
+secrets:
+  admin_password:
+    file: ./secrets/admin_password
+  clinic_data_key:
+    file: ./secrets/clinic_data_key
+volumes:
+  clinic_data:
+  caddy_data:
+  caddy_config:
+networks:
+  clinic:
